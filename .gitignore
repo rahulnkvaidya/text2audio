@@ -1,6 +1,44 @@
-# Build artifacts
-/dist
-/build
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 
-# Database file
-tts_app.db
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+develop-eggs/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are created by a running PyInstaller script
+*.spec
+
+# Installer logs
+pyinstall.log
+
+# Virtual Environments
+.env
+.venv
+venv/
+env/
+
+# Local config files
+config.json
+
+# Output folder
+tts_outputs/
