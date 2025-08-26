@@ -1,13 +1,28 @@
-
 import tkinter as tk
 from tkinter import scrolledtext, messagebox, Menu, Toplevel, Label, Entry, Button
 import json
 import os
+import sys
 import azure.cognitiveservices.speech as speechsdk
 from datetime import datetime
+import logging
 
-CONFIG_FILE = 'config.json'
-OUTPUT_DIR = 'tts_outputs'
+# Setup basic logging
+logging.basicConfig(filename='app_errors.log', level=logging.ERROR,
+                    format='%(asctime)s:%(levelname)s:%(message)s')
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+CONFIG_FILE = resource_path('config.json')
+OUTPUT_DIR = 'tts_outputs' # Keep this relative to the executable's location
 
 class ConfigWindow(Toplevel):
     def __init__(self, parent):
@@ -44,6 +59,7 @@ class ConfigWindow(Toplevel):
             messagebox.showinfo("Success", "Configuration saved successfully!", parent=self)
             self.destroy()
         except IOError as e:
+            logging.error(f"Failed to save config: {e}")
             messagebox.showerror("Error", f"Failed to save config file: {e}", parent=self)
 
 class Application(tk.Frame):
@@ -87,13 +103,18 @@ class Application(tk.Frame):
             if os.path.exists(CONFIG_FILE):
                 with open(CONFIG_FILE, 'r') as f:
                     return json.load(f)
-        except (IOError, json.JSONDecodeError):
+        except (IOError, json.JSONDecodeError) as e:
+            logging.error(f"Failed to load config: {e}")
             return {}
         return {}
 
     def ensure_output_dir(self):
-        if not os.path.exists(OUTPUT_DIR):
-            os.makedirs(OUTPUT_DIR)
+        try:
+            if not os.path.exists(OUTPUT_DIR):
+                os.makedirs(OUTPUT_DIR)
+        except OSError as e:
+            logging.error(f"Failed to create output directory: {e}")
+            messagebox.showerror("Error", f"Could not create output directory: {e}")
 
     def convert_text_to_speech(self):
         text = self.text_input.get("1.0", tk.END).strip()
@@ -115,16 +136,11 @@ class Application(tk.Frame):
         try:
             speech_config = speechsdk.SpeechConfig(subscription=api_key, region=region)
             
-            # Use a filename-safe version of the text for the output file
             safe_text = "".join(c for c in text[:30] if c.isalnum() or c in (' ','.','_')).rstrip()
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_filename = os.path.join(OUTPUT_DIR, f"{safe_text}_{timestamp}.mp3")
             
             audio_config = speechsdk.audio.AudioOutputConfig(filename=output_filename)
-            
-            # To use a specific voice
-            # speech_config.speech_synthesis_voice_name = "en-US-JennyNeural"
-            
             synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
             
             result = synthesizer.speak_text_async(text).get()
@@ -138,14 +154,21 @@ class Application(tk.Frame):
                 if cancellation_details.reason == speechsdk.CancellationReason.Error:
                     if cancellation_details.error_details:
                         error_message += f"\nError details: {cancellation_details.error_details}"
+                logging.error(error_message)
                 self.status_label.config(text="Conversion failed.")
                 messagebox.showerror("Error", error_message)
 
         except Exception as e:
+            logging.error(f"An unexpected error occurred during conversion: {e}")
             self.status_label.config(text="An error occurred.")
-            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
+            messagebox.showerror("Error", f"An unexpected error occurred: {e}\n\nCheck app_errors.log for more details.")
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = Application(master=root)
-    app.mainloop()
+    try:
+        root = tk.Tk()
+        app = Application(master=root)
+        app.mainloop()
+    except Exception as e:
+        logging.critical(f"Failed to start application: {e}")
+        # If GUI fails to start, this message might not be visible, but it's good practice.
+        messagebox.showerror("Fatal Error", f"Failed to start application: {e}")

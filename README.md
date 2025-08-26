@@ -60,7 +60,7 @@ You can package this application into a single executable file for easy distribu
 
 1.  **Open a Command Prompt or Terminal**.
 
-2.  **Navigate to the project directory** where `main.py` and `requirements.txt` are located:
+2.  **Navigate to the project's root directory** (the one containing the `src` folder and `requirements.txt`):
     ```sh
     cd path\to\your\project\folder
     ```
@@ -86,11 +86,15 @@ You can package this application into a single executable file for easy distribu
     ```
 
 7.  **Run the PyInstaller build command**:
-    *This command tells PyInstaller to create a single executable file (`--onefile`), prevent a console window from appearing in the background (`--windowed`), and give the executable a specific name.* 
+    *This command tells PyInstaller to create a single executable file (`--onefile`), prevent a console window from appearing (`--windowed`), add the `config.json` file to the package (`--add-data`), and give the executable a specific name.*
     ```sh
-    pyinstaller --onefile --windowed --name Text-to-Audio src/main.py
+    pyinstaller --onefile --windowed --name Text-to-Audio --add-data "src/config.json;."
     ```
 
 8.  **Find your executable**:
     *   The process will create a `dist` folder. 
     *   Inside the `dist` folder, you will find **`Text-to-Audio.exe`**. This is your standalone application that you can run or share.
+
+## Troubleshooting
+
+If the application fails to run or the conversion doesn't work after building the EXE, check for an `app_errors.log` file in the same directory as the executable. This file may contain specific error messages that can help diagnose the problem.
