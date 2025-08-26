@@ -1,0 +1,6 @@
+# Build artifacts
+/dist
+/build
+
+# Database file
+tts_app.db
