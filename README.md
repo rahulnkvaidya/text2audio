@@ -98,3 +98,8 @@ You can package this application into a single executable file for easy distribu
 ## Troubleshooting
 
 If the application fails to run or the conversion doesn't work after building the EXE, check for an `app_errors.log` file in the same directory as the executable. This file may contain specific error messages that can help diagnose the problem.
+
+## Author
+
+- **Rahul Vaidya**
+- Email: <rahulnkvaidya@yahoo.co.in>
